@@ -1,4 +1,4 @@
-package db
+package repository
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"cloud.google.com/go/firestore"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/domain"
 	"github.com/caarlos0/env/v9"
 	"golang.org/x/exp/slog"
 	"google.golang.org/api/iterator"
@@ -38,7 +39,7 @@ func CreateService(ctx context.Context) (*DatabaseService, error) {
 	return ds, nil
 }
 
-func (ds *DatabaseService) AddEvent(ctx context.Context, event *Event) error {
+func (ds *DatabaseService) AddEvent(ctx context.Context, event *domain.Event) error {
 	uuid := event.UUID
 
 	_, err := ds.client.Collection(collectionID).Doc(uuid).Create(ctx, event)
@@ -49,7 +50,7 @@ func (ds *DatabaseService) AddEvent(ctx context.Context, event *Event) error {
 	return nil
 }
 
-func (ds *DatabaseService) SetEvent(ctx context.Context, event *Event) error {
+func (ds *DatabaseService) SetEvent(ctx context.Context, event *domain.Event) error {
 	_, err := ds.client.Collection(collectionID).Doc(event.UUID).Set(ctx, event)
 	if err != nil {
 		return fmt.Errorf("overwrite a document: %v", err)
@@ -58,7 +59,7 @@ func (ds *DatabaseService) SetEvent(ctx context.Context, event *Event) error {
 	return nil
 }
 
-func (ds *DatabaseService) DeleteEvent(ctx context.Context, event *Event) error {
+func (ds *DatabaseService) DeleteEvent(ctx context.Context, event *domain.Event) error {
 	_, err := ds.client.Collection(collectionID).Doc(event.UUID).Delete(ctx)
 	if err != nil {
 		return fmt.Errorf("delete a document: %v", err)
@@ -67,9 +68,9 @@ func (ds *DatabaseService) DeleteEvent(ctx context.Context, event *Event) error 
 	return nil
 }
 
-func (ds *DatabaseService) ListEvents(ctx context.Context) ([]*Event, error) {
+func (ds *DatabaseService) ListEvents(ctx context.Context) ([]*domain.Event, error) {
 	iter := ds.client.Collection(collectionID).Documents(ctx)
-	events := []*Event{}
+	events := []*domain.Event{}
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -79,7 +80,7 @@ func (ds *DatabaseService) ListEvents(ctx context.Context) ([]*Event, error) {
 			return nil, fmt.Errorf("iterate document: %v", err)
 		}
 
-		var event Event
+		var event domain.Event
 		err = doc.DataTo(&event)
 		if err != nil {
 			return nil, fmt.Errorf("convert from document to event type: %v", err)

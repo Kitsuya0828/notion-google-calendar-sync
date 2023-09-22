@@ -1,12 +1,13 @@
-package run
+package task
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/Kitsuya0828/notion-google-calendar-sync/db"
-	"github.com/Kitsuya0828/notion-google-calendar-sync/googlecalendar"
-	"github.com/Kitsuya0828/notion-google-calendar-sync/notioncalendar"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/calendar/google"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/calendar/notion"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/domain"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/repository"
 	"github.com/google/uuid"
 	"golang.org/x/exp/slog"
 )
@@ -15,9 +16,9 @@ func checkAdd(
 	ctx context.Context,
 	notionCalendarService *notioncalendar.CalendarService,
 	googleCalendarService *googlecalendar.CalendarService,
-	notionEvents []*db.Event,
-	googleCalendarEvents []*db.Event,
-	databaseService *db.DatabaseService,
+	notionEvents []*domain.Event,
+	googleCalendarEvents []*domain.Event,
+	databaseService *repository.DatabaseService,
 ) error {
 	events := append(notionEvents, googleCalendarEvents...)
 	for _, event := range events {
@@ -63,9 +64,9 @@ func checkUpdate(
 	ctx context.Context,
 	notionCalendarService *notioncalendar.CalendarService,
 	googleCalendarService *googlecalendar.CalendarService,
-	notionEvents []*db.Event,
-	googleCalendarEvents []*db.Event,
-	databaseService *db.DatabaseService,
+	notionEvents []*domain.Event,
+	googleCalendarEvents []*domain.Event,
+	databaseService *repository.DatabaseService,
 ) error {
 	events, err := databaseService.ListEvents(ctx)
 	if err != nil {

@@ -1,16 +1,16 @@
-package run
+package task
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/Kitsuya0828/notion-google-calendar-sync/db"
-	"github.com/Kitsuya0828/notion-google-calendar-sync/googlecalendar"
-	"github.com/Kitsuya0828/notion-google-calendar-sync/notioncalendar"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/repository"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/calendar/google"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/calendar/notion"
 	"golang.org/x/exp/slog"
 )
 
-func Run() error {
+func Exec() error {
 	ctx := context.Background()
 
 	// List future events in Notion database
@@ -36,7 +36,7 @@ func Run() error {
 
 	// Initialize Firestore client
 	slog.Debug("initialize firestore client")
-	databaseService, err := db.CreateService(ctx)
+	databaseService, err := repository.CreateService(ctx)
 	if err != nil {
 		return fmt.Errorf("initialize database service: %v", err)
 	}

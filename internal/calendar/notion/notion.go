@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Kitsuya0828/notion-google-calendar-sync/db"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/domain"
 	"github.com/caarlos0/env/v9"
 	"github.com/dstotijn/go-notion"
 	"golang.org/x/exp/slog"
@@ -40,7 +40,7 @@ func NewService() (*CalendarService, error) {
 	return cs, nil
 }
 
-func (cs *CalendarService) ListEvents(ctx context.Context) ([]*db.Event, error) {
+func (cs *CalendarService) ListEvents(ctx context.Context) ([]*domain.Event, error) {
 	now := time.Now()
 	req := &notion.DatabaseQuery{
 		Filter: &notion.DatabaseQueryFilter{
@@ -53,7 +53,7 @@ func (cs *CalendarService) ListEvents(ctx context.Context) ([]*db.Event, error) 
 		},
 	}
 
-	events := []*db.Event{}
+	events := []*domain.Event{}
 
 	loc, err := time.LoadLocation(cs.config.DefaultTimeZone)
 	if err != nil {
@@ -69,7 +69,7 @@ func (cs *CalendarService) ListEvents(ctx context.Context) ([]*db.Event, error) 
 		result := response.Results
 
 		for _, page := range result {
-			event := &db.Event{NotionEventID: page.ID}
+			event := &domain.Event{NotionEventID: page.ID}
 
 			props, ok := page.Properties.(notion.DatabasePageProperties)
 			if !ok {
@@ -151,7 +151,7 @@ func (cs *CalendarService) ListEvents(ctx context.Context) ([]*db.Event, error) 
 	return events, nil
 }
 
-func (cs *CalendarService) CreateEvent(ctx context.Context, event *db.Event) (string, error) {
+func (cs *CalendarService) CreateEvent(ctx context.Context, event *domain.Event) (string, error) {
 	date := &notion.Date{
 		Start: notion.NewDateTime(event.StartTime, !event.IsAllday),
 	}
@@ -211,7 +211,7 @@ func (cs *CalendarService) CreateEvent(ctx context.Context, event *db.Event) (st
 	return page.ID, nil
 }
 
-func (cs *CalendarService) UpdateEvent(ctx context.Context, event *db.Event) error {
+func (cs *CalendarService) UpdateEvent(ctx context.Context, event *domain.Event) error {
 	date := &notion.Date{
 		Start: notion.NewDateTime(event.StartTime, !event.IsAllday),
 	}
@@ -269,7 +269,7 @@ func (cs *CalendarService) UpdateEvent(ctx context.Context, event *db.Event) err
 	return nil
 }
 
-func (cs *CalendarService) DeleteEvent(ctx context.Context, event *db.Event) error {
+func (cs *CalendarService) DeleteEvent(ctx context.Context, event *domain.Event) error {
 	archived := true
 	params := notion.UpdatePageParams{
 		Archived: &archived,

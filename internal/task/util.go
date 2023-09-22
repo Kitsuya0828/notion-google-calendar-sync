@@ -1,21 +1,21 @@
-package run
+package task
 
 import (
-	"github.com/Kitsuya0828/notion-google-calendar-sync/db"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/domain"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/exp/slog"
 )
 
-func getEventsIDMap(events []*db.Event) map[string]*db.Event {
-	m := make(map[string]*db.Event)
+func getEventsIDMap(events []*domain.Event) map[string]*domain.Event {
+	m := make(map[string]*domain.Event)
 	for _, event := range events {
 		m[event.UUID] = event
 	}
 	return m
 }
 
-func updateEventField(dbEvent *db.Event, partiallyUpdatedEvent *db.Event) *db.Event {
+func updateEventField(dbEvent *domain.Event, partiallyUpdatedEvent *domain.Event) *domain.Event {
 	updatedEvent := dbEvent
 
 	updatedEvent.Title = partiallyUpdatedEvent.Title
@@ -30,11 +30,11 @@ func updateEventField(dbEvent *db.Event, partiallyUpdatedEvent *db.Event) *db.Ev
 	return dbEvent
 }
 
-func getCorrectEvent(dbEvent *db.Event, notionEvent *db.Event, googleCalendarEvent *db.Event) (*db.Event, bool, bool) {
+func getCorrectEvent(dbEvent *domain.Event, notionEvent *domain.Event, googleCalendarEvent *domain.Event) (*domain.Event, bool, bool) {
 	correctEvent := dbEvent
 
 	notionOpts := []cmp.Option{
-		cmpopts.IgnoreFields(db.Event{}, "CreatedTime", "UpdatedTime", "NotionEventID", "GoogleCalendarEventID"),
+		cmpopts.IgnoreFields(domain.Event{}, "CreatedTime", "UpdatedTime", "NotionEventID", "GoogleCalendarEventID"),
 	}
 
 	isNotionUpdated := false
@@ -45,7 +45,7 @@ func getCorrectEvent(dbEvent *db.Event, notionEvent *db.Event, googleCalendarEve
 	}
 
 	googleCalendarOpts := []cmp.Option{
-		cmpopts.IgnoreFields(db.Event{}, "Color", "CreatedTime", "UpdatedTime", "NotionEventID", "GoogleCalendarEventID"),
+		cmpopts.IgnoreFields(domain.Event{}, "Color", "CreatedTime", "UpdatedTime", "NotionEventID", "GoogleCalendarEventID"),
 	}
 
 	isGoogleCalendarUpdated := false

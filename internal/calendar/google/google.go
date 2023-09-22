@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Kitsuya0828/notion-google-calendar-sync/db"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/domain"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/repository"
 	"github.com/caarlos0/env/v9"
 	"golang.org/x/exp/slog"
 	"google.golang.org/api/calendar/v3"
@@ -36,8 +37,8 @@ func NewService(ctx context.Context) (*CalendarService, error) {
 	return cs, nil
 }
 
-func (cs *CalendarService) ListEvents() ([]*db.Event, error) {
-	events := []*db.Event{}
+func (cs *CalendarService) ListEvents() ([]*domain.Event, error) {
+	events := []*domain.Event{}
 	result, err := cs.service.Events.List(cs.config.CalendarID).TimeMin(time.Now().Format(time.RFC3339)).Do()
 	if err != nil {
 		return nil, fmt.Errorf("execute calendar.events.list call: %v", err)
@@ -50,7 +51,7 @@ func (cs *CalendarService) ListEvents() ([]*db.Event, error) {
 	time.Local = tz
 
 	for _, item := range result.Items {
-		event := &db.Event{
+		event := &domain.Event{
 			Title:                 item.Summary,
 			GoogleCalendarEventID: item.Id,
 			Description:           item.Description,
@@ -104,7 +105,7 @@ func (cs *CalendarService) ListEvents() ([]*db.Event, error) {
 			}
 		}
 
-		for k, v := range db.ColorMap {
+		for k, v := range repository.ColorMap {
 			if v == item.ColorId {
 				event.Color = k
 				break
@@ -117,7 +118,7 @@ func (cs *CalendarService) ListEvents() ([]*db.Event, error) {
 	return events, nil
 }
 
-func (cs *CalendarService) InsertEvent(event *db.Event) (string, error) {
+func (cs *CalendarService) InsertEvent(event *domain.Event) (string, error) {
 	startDateTime := &calendar.EventDateTime{
 		DateTime: event.StartTime.Format(time.RFC3339),
 	}
@@ -143,7 +144,7 @@ func (cs *CalendarService) InsertEvent(event *db.Event) (string, error) {
 				"uuid": event.UUID,
 			},
 		},
-		ColorId: db.ColorMap[event.Color],
+		ColorId: repository.ColorMap[event.Color],
 	}
 
 	result, err := cs.service.Events.Insert(cs.config.CalendarID, e).Do()
@@ -154,7 +155,7 @@ func (cs *CalendarService) InsertEvent(event *db.Event) (string, error) {
 	return result.Id, nil
 }
 
-func (cs *CalendarService) UpdateEvent(event *db.Event) error {
+func (cs *CalendarService) UpdateEvent(event *domain.Event) error {
 	startDateTime := &calendar.EventDateTime{
 		DateTime: event.StartTime.Format(time.RFC3339),
 	}
@@ -182,7 +183,7 @@ func (cs *CalendarService) UpdateEvent(event *db.Event) error {
 		},
 	}
 	if event.Color != "" {
-		e.ColorId = db.ColorMap[event.Color]
+		e.ColorId = repository.ColorMap[event.Color]
 	}
 
 	result, err := cs.service.Events.Update(cs.config.CalendarID, event.GoogleCalendarEventID, e).Do()
@@ -193,7 +194,7 @@ func (cs *CalendarService) UpdateEvent(event *db.Event) error {
 	return nil
 }
 
-func (cs *CalendarService) DeleteEvent(event *db.Event) error {
+func (cs *CalendarService) DeleteEvent(event *domain.Event) error {
 	err := cs.service.Events.Delete(cs.config.CalendarID, event.GoogleCalendarEventID).Do()
 	if err != nil {
 		return fmt.Errorf("execute calendar.events.delete call: %v", err)

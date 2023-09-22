@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
-	"github.com/Kitsuya0828/notion-google-calendar-sync/run"
+	"github.com/Kitsuya0828/notion-google-calendar-sync/internal/task"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"golang.org/x/exp/slog"
 )
@@ -26,7 +26,7 @@ func myCloudEventFunction(ctx context.Context, e event.Event) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, opt))
 	slog.SetDefault(logger)
 
-	err := run.Run()
+	err := task.Exec()
 	if err != nil {
 		return err
 	}
